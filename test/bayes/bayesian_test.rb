@@ -126,9 +126,30 @@ class BayesianTest < Test::Unit::TestCase
   def test_example
     @classifier.train_interesting "here are some good words. I hope you love them"
     @classifier.train_uninteresting "here are some bad words, I hate you"
-    @classifier.classify "I hate bad words and you" # returns 'Uninteresting'
+    assert_equal 'Uninteresting', @classifier.classify("I hate bad words and you")
+    assert_equal 'Interesting', @classifier.classify("I love")
+
     classifier_snapshot = Marshal.dump @classifier
     trained_classifier = Marshal.load classifier_snapshot
-    trained_classifier.classify "I love" # returns 'Interesting'
+    
+    assert_equal 'Uninteresting', trained_classifier.classify("I hate bad words and you")
+    assert_equal 'Interesting', trained_classifier.classify("I love")
+  end
+
+  def test_multiple_languages
+    @classifier.train_interesting "ここにいい単語があります。私はあなたがそれらを愛することを望みます。 here are some good words. I hope you love them"
+    @classifier.train_uninteresting "ここに悪い単語があります。私はあなたが嫌いです。 here are some bad words, I hate you"
+    assert_equal 'Uninteresting', @classifier.classify("I hate bad words and you")
+    assert_equal 'Uninteresting', @classifier.classify("私は単語とあなたが嫌いです。")
+    assert_equal 'Interesting', @classifier.classify("I love")
+    assert_equal 'Interesting', @classifier.classify("私は愛します。")
+
+    classifier_snapshot = Marshal.dump @classifier
+    trained_classifier = Marshal.load classifier_snapshot
+
+    assert_equal 'Uninteresting', trained_classifier.classify("I hate bad words and you")
+    assert_equal 'Uninteresting', trained_classifier.classify("私は単語とあなたが嫌いです。")
+    assert_equal 'Interesting', trained_classifier.classify("I love")
+    assert_equal 'Interesting', trained_classifier.classify("私は愛します。")
   end
 end
