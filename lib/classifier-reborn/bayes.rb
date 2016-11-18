@@ -43,6 +43,8 @@ module ClassifierReborn
       @enable_threshold    = options[:enable_threshold]
       @threshold           = options[:threshold]
       @enable_stemmer      = options[:enable_stemmer]
+
+      @hasher = Hasher.new
     end
 
     # Provides a general training method for all categories specified in Bayes#new
@@ -64,7 +66,7 @@ module ClassifierReborn
       end
 
       @category_counts[category] += 1
-      Hasher.word_hash(text, @language, @enable_stemmer).each do |word, count|
+      @hasher.word_hash(text, @language, @enable_stemmer).each do |word, count|
         @categories[category][word] += count
         @category_word_count[category] += count
         @total_words += count
@@ -81,7 +83,7 @@ module ClassifierReborn
     def untrain(category, text)
       category = CategoryNamer.prepare_name(category)
       @category_counts[category] -= 1
-      Hasher.word_hash(text, @language, @enable_stemmer).each do |word, count|
+      @hasher.word_hash(text, @language, @enable_stemmer).each do |word, count|
         next if @total_words < 0
         orig = @categories[category][word] || 0
         @categories[category][word] -= count
@@ -101,7 +103,7 @@ module ClassifierReborn
     # The largest of these scores (the one closest to 0) is the one picked out by #classify
     def classifications(text)
       score = {}
-      word_hash = Hasher.word_hash(text, @language, @enable_stemmer)
+      word_hash = @hasher.word_hash(text, @language, @enable_stemmer)
       training_count = @category_counts.values.reduce(:+).to_f
       @categories.each do |category, category_words|
         score[category.to_s] = 0

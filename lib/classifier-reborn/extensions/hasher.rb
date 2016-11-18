@@ -4,12 +4,15 @@
 # License::   LGPL
 
 require 'set'
+require 'juman'
 
 module ClassifierReborn
-  module Hasher
+  class Hasher
     STOPWORDS_PATH = [File.expand_path(File.dirname(__FILE__) + '/../../../data/stopwords')]
 
-    module_function
+    def initialize
+      @juman = Juman.new(juman_command: ENV['JUMAN_CMD'])
+    end
 
     # Return a Hash of strings => ints. Each word in the string is stemmed,
     # interned, and indexes to its frequency in the document.
@@ -21,7 +24,15 @@ module ClassifierReborn
 
     # Return a word hash without extra punctuation or short symbols, just stemmed words
     def clean_word_hash(str, language = 'en', enable_stemmer = true)
-      word_hash_for_words str.gsub(/[^\p{WORD}\s]/, '').downcase.split, language, enable_stemmer
+      if language == 'en-ja'
+        morphemes = @juman.analyze(str)
+        words = morphemes.reject { |m|
+          ["助詞", "指示詞", "特殊", "接尾辞"].include?(m.pos)
+        }.map { |m| m.base }
+      else
+        words = str.gsub(/[^\p{WORD}\s]/, '').downcase.split
+      end
+      word_hash_for_words(words, language, enable_stemmer)
     end
 
     def word_hash_for_words(words, language = 'en', enable_stemmer = true)
@@ -29,7 +40,9 @@ module ClassifierReborn
       words.each do |word|
         next unless word.length > 2 && !STOPWORDS[language].include?(word)
         if enable_stemmer
-          d[word.stem.intern] += 1
+          stem = word.stem
+          stem = word if stem.encoding == Encoding::ASCII_8BIT # use original word when failed to stem
+          d[stem.intern] += 1
         else
           d[word.intern] += 1
         end

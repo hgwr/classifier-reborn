@@ -40,6 +40,7 @@ module ClassifierReborn
       @built_at_version = -1
       @language = options[:language] || 'en'
       extend CachedContentNode::InstanceMethods if @cache_node_vectors = options[:cache_node_vectors]
+      @hasher = Hasher.new
     end
 
     # Returns true if the index needs to be rebuilt.  The index needs
@@ -63,7 +64,7 @@ module ClassifierReborn
     #   lsi.add_item ar, *ar.categories { |x| ar.content }
     #
     def add_item(item, *categories, &block)
-      clean_word_hash = Hasher.clean_word_hash((block ? block.call(item) : item.to_s), @language)
+      clean_word_hash = @hasher.clean_word_hash((block ? block.call(item) : item.to_s), @language)
       @items[item] = if @cache_node_vectors
                        CachedContentNode.new(clean_word_hash, *categories)
                      else
@@ -303,7 +304,7 @@ module ClassifierReborn
       if @items[item]
         return @items[item]
       else
-        clean_word_hash = Hasher.clean_word_hash((block ? block.call(item) : item.to_s), @language)
+        clean_word_hash = @hasher.clean_word_hash((block ? block.call(item) : item.to_s), @language)
 
         content_node = ContentNode.new(clean_word_hash, &block) # make the node and extract the data
 
