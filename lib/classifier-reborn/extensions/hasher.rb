@@ -24,13 +24,14 @@ module ClassifierReborn
 
     # Return a word hash without extra punctuation or short symbols, just stemmed words
     def clean_word_hash(str, language = 'en', enable_stemmer = true)
+      str = str.gsub(/[^\p{WORD}\s]/, '').downcase
       if language == 'en-ja'
         morphemes = @juman.analyze(str)
         words = morphemes.reject { |m|
           ["助詞", "指示詞", "特殊", "接尾辞"].include?(m.pos)
         }.map { |m| m.base }
       else
-        words = str.gsub(/[^\p{WORD}\s]/, '').downcase.split
+        words = str.split
       end
       word_hash_for_words(words, language, enable_stemmer)
     end
@@ -38,10 +39,13 @@ module ClassifierReborn
     def word_hash_for_words(words, language = 'en', enable_stemmer = true)
       d = Hash.new(0)
       words.each do |word|
-        next unless word.length > 2 && !STOPWORDS[language].include?(word)
+        next if language != 'en-ja' && word.length <= 2 
+        next unless !STOPWORDS[language].include?(word)
         if enable_stemmer
-          stem = word.stem
-          stem = word if stem.encoding == Encoding::ASCII_8BIT # use original word when failed to stem
+          # Using String#stem causes changing the encoding to ASCII-8BIT. So we encode the stem to UTF-8.
+          stem = word.stem.encode('UTF-8', 'ASCII-8BIT', :invalid => :replace, :undef => :replace, :replace => '〓')
+          # use original word when failed to stem
+          stem =~ /〓/ and stem = word
           d[stem.intern] += 1
         else
           d[word.intern] += 1

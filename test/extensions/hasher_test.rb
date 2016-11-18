@@ -15,22 +15,9 @@ class HasherTest < Test::Unit::TestCase
   end
 
   def test_word_hash2
-    text = "ここにいい単語があります。私はあなたがそれらを愛することを望みます。 here are some good words. I hope you love them!"
+    text = "ここにいい単語があります。私はあなたがそれらを愛することを望みます。here are some good words of test's. I hope you love them!"
 
-
-    # juman = Juman.new(juman_command: ENV['JUMAN_CMD'])
-    # result = juman.analyze(text)
-    # result.each do |r|
-    #   next if ["助詞", "指示詞", "特殊", "接尾辞"].include?(r.pos)
-    #   next if Hasher::STOPWORDS['en-ja'].include?(r.base)
-    #   puts "#{r.base}"
-    # end
-
-    # if ENV['JUMAN_CMD'].blank?
-    #   ENV['JUMAN_CMD'] = '/opt/juman-7.01/bin/juman'
-    # end
-
-    hash = { good: 1, :'!' => 1, hope: 1, :"'" => 1, :'.' => 1, love: 1, word: 1, them: 1, test: 1 }
+    hash = { good: 1, :'!' => 1, hope: 1, :"'" => 1, :'.' => 1, love: 1, word: 1, them: 1, test: 1, :。=>2 }
     %w{ いい 単語 ある 私 あなた 愛する こと 望む }.each do |w|
       hash[w.to_sym] = 1
     end
