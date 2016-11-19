@@ -11,7 +11,11 @@ module ClassifierReborn
     STOPWORDS_PATH = [File.expand_path(File.dirname(__FILE__) + '/../../../data/stopwords')]
 
     def initialize
-      @juman = Juman.new(juman_command: ENV['JUMAN_CMD'])
+      @juman = nil
+    end
+
+    def juman
+      @juman ||= Juman.new(juman_command: ENV['JUMAN_CMD'])
     end
 
     # Return a Hash of strings => ints. Each word in the string is stemmed,
@@ -26,7 +30,7 @@ module ClassifierReborn
     def clean_word_hash(str, language = 'en', enable_stemmer = true)
       str = str.gsub(/[^\p{WORD}\s]/, '').downcase
       if language == 'en-ja'
-        morphemes = @juman.analyze(str)
+        morphemes = juman.analyze(str)
         words = morphemes.reject { |m|
           ["助詞", "指示詞", "特殊", "接尾辞"].include?(m.pos)
         }.map { |m| m.base }
