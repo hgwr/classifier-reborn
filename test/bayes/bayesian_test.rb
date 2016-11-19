@@ -3,7 +3,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/../test_helper')
 class BayesianTest < Test::Unit::TestCase
   def setup
-    @classifier = ClassifierReborn::Bayes.new 'Interesting', 'Uninteresting'
+    @classifier = ClassifierReborn::Bayes.new('Interesting', 'Uninteresting', language: 'en-ja')
   end
 
   def test_good_training
@@ -129,11 +129,23 @@ class BayesianTest < Test::Unit::TestCase
     assert_equal 'Uninteresting', @classifier.classify("I hate bad words and you")
     assert_equal 'Interesting', @classifier.classify("I love")
 
-    classifier_snapshot = Marshal.dump @classifier
-    trained_classifier = Marshal.load classifier_snapshot
+    classifier_snapshot_yaml = @classifier.save_to_yaml
+    trained_classifier = ClassifierReborn::Bayes.new('Interesting', 'Uninteresting', language: 'en-ja')
+    trained_classifier.load_yaml(classifier_snapshot_yaml)
     
     assert_equal 'Uninteresting', trained_classifier.classify("I hate bad words and you")
     assert_equal 'Interesting', trained_classifier.classify("I love")
+  end
+
+  def test_save_and_load
+    correct_yaml = "---\n- :Interesting: {}\n  :Uninteresting: {}\n- 0\n- {}\n- {}\n- en-ja\n- false\n- false\n- 0.0\n- true\n"
+    
+    yaml = @classifier.save_to_yaml
+    assert_equal correct_yaml, yaml
+    
+    @classifier.load_yaml(yaml)
+    loaded_yaml = @classifier.save_to_yaml
+    assert_equal correct_yaml, loaded_yaml
   end
 
   def test_multiple_languages
@@ -144,8 +156,9 @@ class BayesianTest < Test::Unit::TestCase
     assert_equal 'Interesting', @classifier.classify("I love")
     assert_equal 'Interesting', @classifier.classify("私は愛します。")
 
-    classifier_snapshot = Marshal.dump @classifier
-    trained_classifier = Marshal.load classifier_snapshot
+    classifier_snapshot_yaml = @classifier.save_to_yaml
+    trained_classifier = ClassifierReborn::Bayes.new('Interesting', 'Uninteresting', language: 'en-ja')
+    trained_classifier.load_yaml(classifier_snapshot_yaml)
 
     assert_equal 'Uninteresting', trained_classifier.classify("I hate bad words and you")
     assert_equal 'Uninteresting', trained_classifier.classify("私は単語とあなたが嫌いです。")

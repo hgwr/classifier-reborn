@@ -3,6 +3,8 @@
 # License::   LGPL
 
 require_relative 'category_namer'
+require 'yaml'
+require 'pp'
 
 module ClassifierReborn
   class Bayes
@@ -45,6 +47,32 @@ module ClassifierReborn
       @enable_stemmer      = options[:enable_stemmer]
 
       @hasher = Hasher.new
+    end
+
+    INSTANCE_VARIABLE_NAMES_TO_BE_SAVED =
+      [
+       :@categories,
+       :@total_words,
+       :@category_counts,
+       :@category_word_count,
+       :@language,
+       :@auto_categorize,
+       :@enable_threshold,
+       :@threshold,
+       :@enable_stemmer,
+      ]
+
+    def save_to_yaml
+      INSTANCE_VARIABLE_NAMES_TO_BE_SAVED.map do |var_name|
+        instance_variable_get(var_name)
+      end.to_yaml
+    end
+
+    def load_yaml(yaml)
+      values = YAML::load(yaml)
+      INSTANCE_VARIABLE_NAMES_TO_BE_SAVED.each_with_index do |v, i|
+        instance_variable_set(v, values[i])
+      end
     end
 
     # Provides a general training method for all categories specified in Bayes#new
