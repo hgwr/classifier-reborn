@@ -123,6 +123,22 @@ class BayesianTest < Test::Unit::TestCase
     assert_not_equal classification_of_bad_data, classification_after_untrain
   end
 
+  def test_serialize_safe_in_en
+    @classifier = ClassifierReborn::Bayes.new('Interesting', 'Uninteresting', language: 'en')
+    
+    @classifier.train_interesting "here are some good words. I hope you love them"
+    @classifier.train_uninteresting "here are some bad words, I hate you"
+    assert_equal 'Uninteresting', @classifier.classify("I hate bad words and you")
+    assert_equal 'Interesting', @classifier.classify("I love")
+
+    classifier_snapshot = Marshal.dump @classifier
+    trained_classifier = Marshal.load classifier_snapshot
+    
+    assert_equal 'Uninteresting', trained_classifier.classify("I hate bad words and you")
+    assert_equal 'Interesting', trained_classifier.classify("I love")
+  end
+
+
   def test_example
     @classifier.train_interesting "here are some good words. I hope you love them"
     @classifier.train_uninteresting "here are some bad words, I hate you"
