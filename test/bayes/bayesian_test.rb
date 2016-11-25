@@ -154,7 +154,7 @@ class BayesianTest < Test::Unit::TestCase
   end
 
   def test_save_and_load
-    correct_yaml = "---\n- :Interesting: {}\n  :Uninteresting: {}\n- 0\n- {}\n- {}\n- en-ja\n- false\n- false\n- 0.0\n- true\n"
+    correct_yaml = "---\n- :Interesting: {}\n  :Uninteresting: {}\n- 0\n- {}\n- {}\n- en-ja\n- false\n- false\n- 0.0\n- true\n- true\n"
     
     yaml = @classifier.save_to_yaml
     assert_equal correct_yaml, yaml
